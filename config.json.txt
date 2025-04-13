@@ -1,0 +1,5 @@
+{
+	"bot_key":"7373299430:AAF0ntqDQLgmBu9lvMspbCUFSw5Ar534ZZI"
+
+	"wether_api":"1234"
+}
