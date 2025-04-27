@@ -1,9 +1,20 @@
 import asyncio
 from random import randint
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 import requests
 import json
+
+button1 = InlineKeyboardButton("Кнопка 1", callback_data="button1")
+button2 = InlineKeyboardButton("Кнопка 2", callback_data="button2")
+button_url = InlineKeyboardButton("Ссылка на Путина", url="https://ru.wikipedia.org/wiki/%D0%92%D0%BB%D0%B0%D0%B4%D0%B8%D0%BC%D0%B8%D1%80_(%D0%B3%D0%BE%D1%80%D0%BE%D0%B4,_%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F)", callback_data="putin")
+
+keyboard = InlineKeyboardMarkup([
+    [button1, button2],
+    [button_url],
+    [InlineKeyboardButton("Кнопка 3", callback_data="button3")]
+])
 
 #Получаем ключ weather api и ключ telegram бота
 with open("config.json", "r") as f:
@@ -13,7 +24,7 @@ with open("config.json", "r") as f:
 
 # Функция стартового сообщения
 async def start(update: Update, context):
-    await update.message.reply_text('Привет! Я тестовый бот. Напиши что-нибудь!')
+    await update.message.reply_text('Привет! Я тестовый бот. Напиши что-нибудь!', reply_markup=keyboard)
 
 # Эхо-команда
 async def echo(update: Update, context):
@@ -82,6 +93,21 @@ async def get_weather(update: Update, context):
     except Exception as e:
         await update.message.reply_text(f"Ошибка при получении погоды: {e}")
 
+async def button_callback(update: Update, context):
+    query = update.callback_query
+    await query.answer("SOS нажали на кнопку", show_alert=True)
+    user = query.from_user
+    await query.message.reply_text(query.data)
+    if query.data == "button1":
+        await query.message.reply_text(f"Вы нажали на кнопку одын, {user.first_name}")
+    if query.data == "button2":
+        await query.message.reply_text(f"Вы нажали на кнопку двыа, {user.first_name}")
+    if query.data == "button3":
+        await query.message.reply_text(f"Вы нажали на кнопку триада :page_facing_up,  {user.first_name}")
+    if query.data == "putin":
+        await query.message.reply_text(f"{user.first_name} успешно проголосал за Путина!")
+
+
 # Главная функция для запуска бота
 def main():
     application = Application.builder().token(BOT_TOKEN).build()
@@ -90,8 +116,10 @@ def main():
     application.add_handler(CommandHandler("guess", guess_number))
     application.add_handler(CommandHandler("settimer", settimer))
     application.add_handler(CommandHandler("getWeather", get_weather))
+    application.add_handler(CallbackQueryHandler(button_callback))
     print("Бот запущен")
     application.run_polling()
 
 if __name__ == '__main__':
     main()
+    
